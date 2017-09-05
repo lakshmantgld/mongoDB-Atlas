@@ -3,9 +3,9 @@ This repo is a collection of mongoDB's best practices & features of Atlas. I was
 
 ## Table of Contents
 
-- [Introduction to MongoDB] (#Introduction to MongoDB)
-- [What is Atlas?] (#What is Atlas)
-- [Data Modeling in mongoDB] (#Data Modeling)
+- [Introduction to MongoDB](#Introduction to MongoDB)
+- [What is Atlas?](#What is Atlas)
+- [Data Modeling in mongoDB](#Data Modeling)
     - [Embedded R]
 ## Introduction to MongoDB:
 At the time of writing, **MongoDB** is one of the **255** NoSQL databases. When compared to relational databases, [NoSQL](https://www.mongodb.com/nosql-explained) in general are more scalable and provide superior performance. Both SQL & NoSQL databases have their unique advantages and trade off. NoSQL databases are chose for their schema-less model and highly scalable system. According to [CAP](https://en.wikipedia.org/wiki/CAP_theorem) theorem, any distributed system can only satisfy two of these three Qualities namely, **C** onsistent, **A** vailability & **P** artition tolerance.
