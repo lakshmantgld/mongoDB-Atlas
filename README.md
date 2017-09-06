@@ -20,9 +20,16 @@ This repo is a collection of mongoDB's best practices & features of Atlas. I was
         - [Storage Capacity, Speed and Encryption](#storage-capacity-speed-and-encryption)
         - [Replication Factor](#replication-factor)
         - [Sharded Cluster](#sharded-cluster)
-        - [Backup](#Backup)
-    - [Sharding](#Sharding-Best-Practices)
-    - [Security](#Atlas-Security)
+        - [Backup](#backup)
+    - [Sharding](#sharding-best-practices)
+    - [Security](#atlas-security)
+        - [VPC](#VPC)
+        - [VPDatabase Cluster - User & PasswordC](#VPC)
+        - [VPAtlas UserC](#VPC)
+        - [Encryption at Rest](#VPC)
+        - [Encryption in Flight](#VPC)
+
+
     - [Monitoring Metrics](#Monitoring-Metrics)
     - [Backup & Restore](#Backup-&-Restore)
     - [Summary](#Summary)
@@ -180,7 +187,7 @@ The cluster creation is surprisingly simple, you can deploy an entire Atlas clus
 Once you are logged in to your **Project** -> **Clusters**, you will find the **Build a New Cluster** option in the upper right corner. Click that Button. you will see a long modal consisting steps for cluster creation process.
 
 - ##### Cluster Name & MongoDB Version
-In the modal, first option is **Cluster Name**, name you cluster meaningfully as you will not be able to update it later. Second option is **MongoDB Version**, the Atlas itself selects the latest version for you. But If you want to change to a particular mongoDB version, you can also do that.
+In the modal, first option is **Cluster Name**, name you cluster meaningfully as you will not be able to update it later. Second option is **MongoDB Version**, the Atlas itself selects the latest version for you. But If you want to change to a particular mongoDB version, you can also select that.
 
 - ##### Cloud Provider & Region
 The third option is **Cloud Provider and Region**. Choose the cloud provider you wish and make sure you select a region similar to your application's region. This is important because *VPC peering is region-dependent* and once deployed, you cannot change the region.
@@ -198,37 +205,37 @@ MongoDB makes **extensive** use of RAM to speed up database operations. In Mongo
 
 Some operations may inadvertently purge a large percentage of the working set from memory, which adversely affects performance. For example, a query that scans all documents in the database, where the database is larger than available RAM on the server, will cause documents to be read into memory and may lead to portions of the working set being written out to disk. Other examples include various maintenance operations such as compacting or repairing a database and rebuilding indexes.
 
-If your *database working set size exceeds the available RAM of your system, consider provisioning an instance with larger RAM capacity (scaling up) or sharding the database across additional instances (scaling out)*. Scaling is an automated, on-line operation which is launched by selecting the new configuration after clicking the CONFIGURE button in MongoDB Atlas. It is easier to implement sharding before the system’s resources are consumed, so capacity planning is an important element in successful project delivery.
+If your *database working set size exceeds the available RAM of your system, consider provisioning an instance with larger RAM capacity (scaling up) or sharding the database across additional instances (scaling out)*. Scaling is an automated, on-line operation which is launched by selecting the new configuration after clicking the **Configure** button in MongoDB Atlas. It is easier to implement sharding before the system’s resources are consumed, so capacity planning is an important element in successful project delivery.
 
 - ##### Storage Capacity, Speed and Encryption
-Choose the **storage capacity** according to your application, but consider your **working set**, refer the above RAM section, before selecting the capacity. [Amazon EBS](https://aws.amazon.com/ebs/) provides a range of options that allow you to optimize storage performance and cost for your workload. As explaining about **IOPS** and **throughput** is out of the scope of this repo, refer to the EBS link for more information. `Higher the IOPS, better the Performance`. So, choose the **IOPS speed** depending upon your budget and SLA. Again Encryption on Rest has its own trade-offs, refer [Encryption at Rest](#Encryption-at-Rest) for more information.
+Choose the **storage capacity** according to your application, but consider your **working set**, refer the above [RAM](#ram) section, before selecting the capacity. [Amazon EBS](https://aws.amazon.com/ebs/) provides a range of options that allow you to optimize storage performance and cost for your workload. As explaining about **IOPS** and **throughput** is out of the scope of this repo, refer to the EBS link for more information. `Higher the IOPS, better the Performance`. So, choose the **IOPS speed** depending upon your **budget and SLA**. Again Encryption on Rest has its own trade-offs, refer [Encryption at Rest](#encryption-at-rest) for more information.
 
 - ##### Replication Factor
 **Replicas** is important to have *higher availability* for your mongo cluster. MongoDb provides three types of replica sets namely, 3-node, 5-node and 7-node replica set. MongoDB maintains multiple copies of data, called `replica sets`, using *native replication*. Replica failover is fully automated in MongoDB, so it is not necessary to manually intervene to recover nodes in the event of a failure.
 
 *A replica set consists of multiple replica nodes*. At any given time, one member acts as the primary replica and the other members act as secondary replicas. *If the primary member fails for any reason (e.g., a failure of the host system), one of the secondary members is automatically elected to primary and begins to accept all writes;* this is typically completed in 2 seconds or less and reads can optionally continue on the secondaries.
 
-**Note:** *Replica sets are only for higher availability, not scalability* For scaling, you need to shard the cluster. Updates are typically replicated to secondaries quickly, depending on network latency. However, reads on the secondaries will not normally be consistent with reads on the primary. Note that the secondaries are not idle as they must process all writes replicated from the primary. To increase read capacity in your operational system consider sharding. *Secondary reads can be useful for **analytics and ETL applications** as this approach will isolate traffic from operational workloads. You may choose to read from secondaries if your application can tolerate eventual consistency*.
+**Note:** *Replica sets are only for higher availability, not scalability* For scaling, you need to shard the cluster. Updates are typically replicated to secondaries quickly, depending on network latency. However, reads on the secondaries will not normally be consistent with reads on the primary. Note that the secondaries are not idle as they must process all writes replicated from the primary. To increase read capacity in your operational system consider sharding. ***Secondary reads** can be useful for **analytics and ETL applications** as this approach will isolate traffic from operational workloads. You may choose to read from secondaries if your application can tolerate eventual consistency*.
 
 - ##### Sharded Cluster
 MongoDB Atlas provides **horizontal scale-out** for databases using a technique called **sharding**, which is transparent to applications. MongoDB distributes data across multiple Replica Sets called shards. With automatic balancing, MongoDB ensures data is equally distributed across shards as data volumes grow or the size of the cluster increases or decreases. Sharding allows MongoDB deployments to scale beyond the limitations of a single server, such as bottlenecks in RAM or disk I/O, without adding complexity to the application. *In case, you need a sharded cluster, select the number of shards required for this mongoDB cluster.*
 
 Users should consider deploying a sharded cluster in the following situations:
 
-**RAM Limitation:** The size of the system's active working set plus indexes is expected to exceed the capacity of the maximum amount of RAM in the system.
+**RAM Limitation:** The size of the system's active [working set](#ram) plus indexes is expected to exceed the capacity of the maximum amount of RAM in the system.
 
 **Disk I/O Limitation:** The system will have a large amount of write activity, and the operating system will not be able to write data fast enough to meet demand, or I/O bandwidth will limit how fast the writes can be flushed to disk.
 
 **Storage Limitation:** The data set will grow to exceed the storage capacity of a single node in the system.
 
-Refer [Sharding Best Practices](#Sharding-Best-Practices) for achieving best performance.
+Refer [Sharding Best Practices](#sharding-best-practices) for achieving best performance.
 
 - ##### Backup:
-Final section is backup. A backup and recovery strategy is necessary to protect your mission-critical data against catastrophic failure, such as a software bug or a user accidentally dropping collections. **Best practice** is to enable backups. Refer [Backup & Restore](#Backup-&-Restore) section for more information.
+Final section is backup. A backup and recovery strategy is necessary to protect your mission-critical data against catastrophic failure, such as a software bug or a user accidentally dropping collections. **Best practice** is to enable backups. Refer [Backup & Restore](#backup-&-restore) section for more information.
 
 ### Sharding-Best-Practices
 
-Users who choose to shard should consider the following best practices. **Select a good shard key: **When selecting fields to use as a shard key, there are at least three key criteria to consider:
+Users who choose to shard should consider the following best practices. **Select a good shard key:** When selecting fields to use as a shard key, there are at least three key criteria to consider:
 
 **1. Cardinality:** Data partitioning is managed in 64 MB chunks by default. Low cardinality (e.g., a user's home country) will tend to group documents together on a small number of shards, which in turn will require frequent rebalancing of the chunks and a single country is likely to exceed the 64 MB chunk size. Instead, a shard key should exhibit high cardinality.
 
@@ -250,9 +257,8 @@ sharding is beneficial because operations can be routed to the fewest shards nec
 **Add capacity before it is needed:** Cluster maintenance is lower risk and more simple to manage if capacity is added before the system is over utilized.
 
 ### Security
-
 - ##### VPC
-The mongoDB cluster is deployed on mongoDB's VPC and you can connect to the cluster either through a publicly available URL or through VPC peering connection. But the best practice is to connect to your cluster using a peering connection, as the database will not be publicly exposed.
+The mongoDB cluster is deployed on mongoDB's VPC and you can connect to the cluster either through a publicly available URL or through VPC peering connection. But the **best practice** is to connect to your cluster using a **peering connection**, as the database will not be publicly exposed.
 
 - ##### Database Cluster User & Password
 With or Without a Peering connection, You still need a password to connect to the database. The best part with Atlas is you can give various privileges to the user. A user can be an `Atlas admin`, `Read & Write to a database` or `only Read access to database`. You can also assign fine-grained permissions like assigning above privileges to only a set of databases and collections. Once you create a user and the associated privileges, you get associated password which you can use to connect to your cluster.
@@ -263,12 +269,12 @@ With or Without a Peering connection, You still need a password to connect to th
 This user is different from the above cluster user. The **fundamental unit** in Atlas is the **mongoDB cluster**. Each project can contain multiple clusters. You can add users to your project with various privileges like `Admin` or `Read-Only`. As perviously said, the best practice is  **grant least privilege** required for the given user.
 
 - ##### Encryption at Rest
-Atlas clusters are deployed in the AWS`s EC2 instances. These instance use [EBS](https://aws.amazon.com/ebs/) for their storage. [KMS](https://aws.amazon.com/kms/) is another AWS service which uses Envelope Encryption techniques to protect your data in the AWS services. [EBS uses KMS for providing Encryption at rest](http://docs.aws.amazon.com/kms/latest/developerguide/services-ebs.html) which is leveraged by Atlas. The Encryption/Decryption is transparent, i.e the cryptographic process is not know to the user accessing the data from EBS. But **Beware**, this will introduce a latency in the reads/writes to the storage.
+Atlas clusters are deployed in the AWS`s EC2 instances. These instance use [EBS](https://aws.amazon.com/ebs/) for their storage. [KMS](https://aws.amazon.com/kms/) is another AWS service which uses Envelope Encryption techniques to protect your data in the AWS services. [EBS uses KMS for providing Encryption at rest](http://docs.aws.amazon.com/kms/latest/developerguide/services-ebs.html) which is leveraged by Atlas. The Encryption/Decryption is transparent, i.e the cryptographic process is not know to the user accessing the data from EBS. But **Beware**, this will introduce a **latency** in the reads/writes to the storage.
 
-You can encrypt data at rest by using the above option. This option can be selected during the cluster creation process. The best practice is to select the option only. If you have any **SLA(service level agreement)** or **compliance** for data encrypt as this will introduce some latency, which affects the user experience.
+You can encrypt data at rest by using the above option. This option can be selected during the cluster creation process. The best practice is to select the option only if you have any **SLA(service level agreement)** or **compliance** for encryption as this will introduce some latency, which affects the user experience.
 
 - ##### Encryption in Flight
-By default, SSL connection is used between your connection & the Atlas cluster. So, Encryption is made on fly, which neglects the data tampering. SSL connection is used even when you query your atlas backup.
+By default, **SSL connection** is used *between your connection & the Atlas cluster*. So, Encryption is made on fly, which neglects the data tampering. SSL connection is used even when you query your atlas backup.
 
 ### Monitoring Metrics
 
