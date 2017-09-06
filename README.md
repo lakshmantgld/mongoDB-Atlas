@@ -327,26 +327,33 @@ Navigate to **Project** -> **Backups**, you will see the backups of all your clu
 MongoDB Atlas includes queryable backups, which allows you to perform queries against existing snapshots to more easily restore data at the document/ object level. Queryable backups allow you to accomplish the following with less time and effort:
 
 - Restore a subset of objects/documents within the MongoDB cluster.
+
 - Identify whether data has been changed in an undesirable way by looking at previous versions alongside current data.
+
 - Identify the best point in time to restore a system by comparing data from multiple snapshots.
 
 You can query your backups either using **Backup Tunnel** or **Connect Manually**. Connect Manually is little tedious as you want to download the **Client certificate** and **Client CA** to connect to this backup and then query it. Lets see how to use **Backup Tunnel:**
 
-**1. **Under **Options** in **backups**, select **Query**. As a first step, you have to select the **snapshot** to query.
-**2. **Enter your password to authorize the process.
-**3. **Choose the platform and follow the instructions. You will able to connect from your local terminal to this backup and start querying. It is quite beneficial.
+**1.** Under **Options** in **backups**, select **Query**. As a first step, you have to select the **snapshot** to query.
+
+**2.** Enter your password to authorize the process.
+
+**3.** Choose the platform and follow the instructions. You will able to connect from your local terminal to this backup and start querying. It is quite beneficial.
 
 - ##### Restore Backup
 For some reasons, you want to restore your backup. There are two options, either **download** the mongoDump and **restore** it some other machines or you restore to a cluster. You have three options namely snapshot, point in time and opLog Timestamp. **snapshot** is a regular one which is taken every 6 hours. **Point in time** helps you to restore to a particular time. [opLog:](https://www.compose.com/articles/the-mongodb-oplog-and-node-js/) You can restore based on the opLog(read/write op timings).
 
 - ###### Downloading the backup:
-  **1. ** **Under **Options** in **backups**, select **Restore**. As a first step, select the type of restore and select an entry from it.
-  **2. ** Now choose the **Download** option. After the user authorization process, you will be able to download the compressed mongo dump.
+  **1.** Under **Options** in **backups**, select **Restore**. As a first step, select the type of restore and select an entry from it.
+
+  **2.** Now choose the **Download** option. After the user authorization process, you will be able to download the compressed mongo dump.
 
 - ###### Restoring to cluster:
-  **1. **Under **Options** in **backups**, select **Restore**. As a first step, select the type of restore and select an entry from it.
-  **2. **Now choose the **Restore to Cluster** option. After the user authorization process, you will be moved to next step.
-  **3. **Select the **project** and the **cluster** to restore. If you restore to a different cluster (**e.g.** *to restore a backup from production into a QA environment*) then there will be no impact on the cluster that the backup was taken from, else there will be downtime until the restore is completed.
+  **1.** Under **Options** in **backups**, select **Restore**. As a first step, select the type of restore and select an entry from it.
+
+  **2.** Now choose the **Restore to Cluster** option. After the user authorization process, you will be moved to next step.
+
+  **3.** Select the **project** and the **cluster** to restore. If you restore to a different cluster (**e.g.** *to restore a backup from production into a QA environment*) then there will be no impact on the cluster that the backup was taken from, else there will be downtime until the restore is completed.
   **Note: **You cannot restore to a free cluster(**M0**). Restore is available only for paid clusters. Automation will clear out all existing data for the chosen item and replace it with the data from your snapshot. All backup data and snapshots will be saved.
 
 ### Summary
