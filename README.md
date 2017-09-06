@@ -34,7 +34,7 @@ This repo is a collection of mongoDB's best practices & features of Atlas. I was
         - [Disk](#disk)
         - [CPU](#cpu)
         - [Connections](#connections)
-        - [Op Counters](#vpc)
+        - [Op Counters](#op-counters)
         - [Queues](#queues)
         - [Replication Lag](#replication-lag)
     - [Backup & Restore](#backup-&-restore)
