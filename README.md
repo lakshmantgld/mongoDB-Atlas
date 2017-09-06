@@ -328,15 +328,15 @@ For some reasons, you want to restore your backup. You can either download the m
 ### Summary
 I know this article is very long, here is the summary to get the key takeaway from this repo:
 
-**1. **Invest time in understanding the queries you have in your application and [model database](##Data-Modelingg) accordingly.
+**1.** Invest time in understanding the queries you have in your application and [model database](##Data-Modelingg) accordingly.
 
-**2. **Select **instance size**, **RAM** based upon your [working set](#RAM) of the application.
+**2.** Select **instance size**, **RAM** based upon your [working set](#RAM) of the application.
 
-**3. **Enable [Encryption at Rest](#Encryption-at-Rest) only when you have an SLA, else don`t do it. This will introduce a latency.
+**3.** Enable [Encryption at Rest](#Encryption-at-Rest) only when you have an SLA, else don`t do it. This will introduce a latency.
 
-**4. **If feasible, use **VPC-Peering** to connect to the mongo cluster and also **whitelist** the VPC-CIDR. Do not use Publicly accessible URLs to connect to your cluster.
+**4.** If feasible, use **VPC-Peering** to connect to the mongo cluster and also **whitelist** the VPC-CIDR. Do not use Publicly accessible URLs to connect to your cluster.
 
-**5. **When you encounter a lag in your application, the first set of [metrics](#Monitoring-Metrics) to look into are **Connections**, **Page Faults** and **Queues**.
+**5.** When you encounter a lag in your application, the first set of [metrics](#Monitoring-Metrics) to look into are **Connections**, **Page Faults** and **Queues**.
 
 ## Thank you
 The above contents are an aggregation of articles that I read on the internet. The best practices and thoughts are only mine. If you think something is wrong or you want to add something to this repo, a **Pull Request** would be amazing.
