@@ -23,15 +23,24 @@ This repo is a collection of mongoDB's best practices & features of Atlas. I was
         - [Backup](#backup)
     - [Sharding](#sharding-best-practices)
     - [Security](#atlas-security)
-        - [VPC](#VPC)
-        - [VPDatabase Cluster - User & PasswordC](#VPC)
-        - [VPAtlas UserC](#VPC)
-        - [Encryption at Rest](#VPC)
-        - [Encryption in Flight](#VPC)
-
-
+        - [VPC](#vpc)
+        - [Database Cluster - User & Password](#database-cluster-user--password)
+        - [Atlas User](#atlas-user)
+        - [Encryption at Rest](#encryption-at-rest)
+        - [Encryption in Flight](#encryption-in-flight)
     - [Monitoring Metrics](#Monitoring-Metrics)
+        - [Application Logs And Database Logs](#application-logs-and-database-logs)
+        - [Page Faults](#page-faults)
+        - [Disk](#disk)
+        - [CPU](#cpu)
+        - [Connections](#connections)
+        - [Op Counters](#vpc)
+        - [Queues](#queues)
+        - [Replication Lag](#replication-lag)
     - [Backup & Restore](#Backup-&-Restore)
+        - [Schedule Backups](#schedule-backups)
+        - [Query Backups](#query-backups)
+        - [Restore Backup](#restore-backup)
     - [Summary](#Summary)
 
 ## Introduction to MongoDB
@@ -183,19 +192,19 @@ You can deploy Atlas mongoDB cluster on any cloud provider of your choice. Since
 
 The cluster creation is surprisingly simple, you can deploy an entire Atlas cluster with few button clicks. I will list down the best practices in each step of creating the cluster.
 
-- ##### Build a New Cluster
+- #### Build a New Cluster
 Once you are logged in to your **Project** -> **Clusters**, you will find the **Build a New Cluster** option in the upper right corner. Click that Button. you will see a long modal consisting steps for cluster creation process.
 
-- ##### Cluster Name & MongoDB Version
+- #### Cluster Name & MongoDB Version
 In the modal, first option is **Cluster Name**, name you cluster meaningfully as you will not be able to update it later. Second option is **MongoDB Version**, the Atlas itself selects the latest version for you. But If you want to change to a particular mongoDB version, you can also select that.
 
-- ##### Cloud Provider & Region
+- #### Cloud Provider & Region
 The third option is **Cloud Provider and Region**. Choose the cloud provider you wish and make sure you select a region similar to your application's region. This is important because *VPC peering is region-dependent* and once deployed, you cannot change the region.
 
-- ##### Instance Size
+- #### Instance Size
 Fourth option **Instance Size**, this is important too. If you are trying out Atlas for the first time or want to test a development version choose **M0**, which is a free cluster offered by the mongoDB. But for production workloads, Atlas recommends **M30** & higher versions. When you select it, you can also see the cost associated with it. The **Cost** is shown for a *single cluster(three replicas)*. Once you select the version say **M30**, you will have to select the **RAM**, **storage capacity**, **storage speed** and **Encryption** option.
 
-- ##### RAM
+- #### RAM
 MongoDB makes **extensive** use of RAM to speed up database operations. In MongoDB, all data is read and manipulated through in-memory representations of the data. Reading *data from memory* is measured in
 `nanoseconds` and *reading data from disk* is measured in `milliseconds`, thus reading from memory is orders of magnitude faster than reading from disk.
 
@@ -207,17 +216,17 @@ Some operations may inadvertently purge a large percentage of the working set fr
 
 If your *database working set size exceeds the available RAM of your system, consider provisioning an instance with larger RAM capacity (scaling up) or sharding the database across additional instances (scaling out)*. Scaling is an automated, on-line operation which is launched by selecting the new configuration after clicking the **Configure** button in MongoDB Atlas. It is easier to implement sharding before the system’s resources are consumed, so capacity planning is an important element in successful project delivery.
 
-- ##### Storage Capacity, Speed and Encryption
+- #### Storage Capacity, Speed and Encryption
 Choose the **storage capacity** according to your application, but consider your **working set**, refer the above [RAM](#ram) section, before selecting the capacity. [Amazon EBS](https://aws.amazon.com/ebs/) provides a range of options that allow you to optimize storage performance and cost for your workload. As explaining about **IOPS** and **throughput** is out of the scope of this repo, refer to the EBS link for more information. `Higher the IOPS, better the Performance`. So, choose the **IOPS speed** depending upon your **budget and SLA**. Again Encryption on Rest has its own trade-offs, refer [Encryption at Rest](#encryption-at-rest) for more information.
 
-- ##### Replication Factor
+- #### Replication Factor
 **Replicas** is important to have *higher availability* for your mongo cluster. MongoDb provides three types of replica sets namely, 3-node, 5-node and 7-node replica set. MongoDB maintains multiple copies of data, called `replica sets`, using *native replication*. Replica failover is fully automated in MongoDB, so it is not necessary to manually intervene to recover nodes in the event of a failure.
 
 *A replica set consists of multiple replica nodes*. At any given time, one member acts as the primary replica and the other members act as secondary replicas. *If the primary member fails for any reason (e.g., a failure of the host system), one of the secondary members is automatically elected to primary and begins to accept all writes;* this is typically completed in 2 seconds or less and reads can optionally continue on the secondaries.
 
 **Note:** *Replica sets are only for higher availability, not scalability* For scaling, you need to shard the cluster. Updates are typically replicated to secondaries quickly, depending on network latency. However, reads on the secondaries will not normally be consistent with reads on the primary. Note that the secondaries are not idle as they must process all writes replicated from the primary. To increase read capacity in your operational system consider sharding. ***Secondary reads** can be useful for **analytics and ETL applications** as this approach will isolate traffic from operational workloads. You may choose to read from secondaries if your application can tolerate eventual consistency*.
 
-- ##### Sharded Cluster
+- #### Sharded Cluster
 MongoDB Atlas provides **horizontal scale-out** for databases using a technique called **sharding**, which is transparent to applications. MongoDB distributes data across multiple Replica Sets called shards. With automatic balancing, MongoDB ensures data is equally distributed across shards as data volumes grow or the size of the cluster increases or decreases. Sharding allows MongoDB deployments to scale beyond the limitations of a single server, such as bottlenecks in RAM or disk I/O, without adding complexity to the application. *In case, you need a sharded cluster, select the number of shards required for this mongoDB cluster.*
 
 Users should consider deploying a sharded cluster in the following situations:
@@ -230,7 +239,7 @@ Users should consider deploying a sharded cluster in the following situations:
 
 Refer [Sharding Best Practices](#sharding-best-practices) for achieving best performance.
 
-- ##### Backup:
+- #### Backup:
 Final section is backup. A backup and recovery strategy is necessary to protect your mission-critical data against catastrophic failure, such as a software bug or a user accidentally dropping collections. **Best practice** is to enable backups. Refer [Backup & Restore](#backup-&-restore) section for more information.
 
 ### Sharding-Best-Practices
@@ -257,95 +266,95 @@ sharding is beneficial because operations can be routed to the fewest shards nec
 **Add capacity before it is needed:** Cluster maintenance is lower risk and more simple to manage if capacity is added before the system is over utilized.
 
 ### Security
-- ##### VPC
+- #### VPC
 The mongoDB cluster is deployed on mongoDB's VPC and you can connect to the cluster either through a publicly available URL or through VPC peering connection. But the **best practice** is to connect to your cluster using a **peering connection**, as the database will not be publicly exposed.
 
-- ##### Database Cluster User & Password
+- #### Database Cluster User & Password
 With or Without a Peering connection, You still need a password to connect to the database. The best part with Atlas is you can give various privileges to the user. A user can be an `Atlas admin`, `Read & Write to a database` or `only Read access to database`. You can also assign fine-grained permissions like assigning above privileges to only a set of databases and collections. Once you create a user and the associated privileges, you get associated password which you can use to connect to your cluster.
 
 **Use-Case:** The `only Read access to database` privilege will be proper fit for analytics, where the concerned user just wants to read the database, but have no permission to mutate it. Best practice is to **grant least privilege** required for the given user.
 
-- ##### Atlas User
+- #### Atlas User
 This user is different from the above cluster user. The **fundamental unit** in Atlas is the **mongoDB cluster**. Each project can contain multiple clusters. You can add users to your project with various privileges like `Admin` or `Read-Only`. As perviously said, the best practice is  **grant least privilege** required for the given user.
 
-- ##### Encryption at Rest
+- #### Encryption at Rest
 Atlas clusters are deployed in the AWS`s EC2 instances. These instance use [EBS](https://aws.amazon.com/ebs/) for their storage. [KMS](https://aws.amazon.com/kms/) is another AWS service which uses Envelope Encryption techniques to protect your data in the AWS services. [EBS uses KMS for providing Encryption at rest](http://docs.aws.amazon.com/kms/latest/developerguide/services-ebs.html) which is leveraged by Atlas. The Encryption/Decryption is transparent, i.e the cryptographic process is not know to the user accessing the data from EBS. But **Beware**, this will introduce a **latency** in the reads/writes to the storage.
 
 You can encrypt data at rest by using the above option. This option can be selected during the cluster creation process. The best practice is to select the option only if you have any **SLA(service level agreement)** or **compliance** for encryption as this will introduce some latency, which affects the user experience.
 
-- ##### Encryption in Flight
+- #### Encryption in Flight
 By default, **SSL connection** is used *between your connection & the Atlas cluster*. So, Encryption is made on fly, which neglects the data tampering. SSL connection is used even when you query your atlas backup.
 
 ### Monitoring Metrics
 
 Atlas gives you way more metrics than needed. It is important to understand the meaning of each metric, so that you can troubleshoot when you incur a problem in the Atlas cluster. You can also set alerts to a specific threshold in each metric and notify your team through mail, slack, etc., MongoDB Atlas monitors `database-specific metrics`, including `page faults`, `ops counters`, `queues`, `connections` and `replica set status`. The MongoDB Atlas team are also monitoring the underlying infrastructure, ensuring that it is always in a healthy state. Here is a short description of each topic:
 
-##### Application Logs And Database Logs
-**Application and database logs** should be monitored for errors and other system information. It is important to correlate your application and database logs in order to determine whether activity in the application is ultimately responsible for other issues in the system. *For example, a spike in user writes may increase the volume of writes to MongoDB, which in turn may overwhelm the underlying storage system. Without the correlation of application and database logs, it might take more time than necessary to establish that the application is responsible for the increase in writes rather than some process running in MongoDB.*
+#### Application Logs And Database Logs
+These should be monitored for errors and other system information. It is important to correlate your application and database logs in order to determine whether activity in the application is ultimately responsible for other issues in the system. *For example, a spike in user writes may increase the volume of writes to MongoDB, which in turn may overwhelm the underlying storage system. Without the correlation of application and database logs, it might take more time than necessary to establish that the application is responsible for the increase in writes rather than some process running in MongoDB.*
 
-##### Page Faults
+#### Page Faults
 *When a **working set** ceases to fit in memory, or other operations have moved working set data out of memory, the volume of page faults may spike in your MongoDB system.* Metric to be monitored, when you encounter a **Slow Performance** in your application.
 
-##### Disk
+#### Disk
 *Beyond memory, disk I/O is also a key performance consideration for a MongoDB system because writes are journaled and regularly flushed to disk.* Under heavy write load the underlying disk subsystem may become overwhelmed, or other processes could be contending with MongoDB, or the storage speed chosen may be inadequate for the volume of writes.
 
-##### CPU
+#### CPU
 A variety of issues could trigger high CPU utilization. This may be normal under most circumstances, but if high CPU utilization is observed without other issues such as disk saturation or page faults, there may be an unusual issue in the system. For example, a **MapReduce** job with an infinite loop, or a query that **sorts and filters** a large number of documents from the working set without good index coverage, might cause a spike in CPU without triggering issues in the disk system or page faults.
 
-##### Connections
+#### Connections
 MongoDB drivers implement connection pooling to facilitate efficient use of resources. Each **connection** consumes **1MB** of RAM, so be careful to monitor the total number of connections so they do not overwhelm RAM and reduce the available memory for the working set. This typically happens when client applications do not properly close their connections, or with Java in particular, that relies on garbage collection to close the connections. Metric to be monitored, when you encounter a **Slow Performance** in your application.
 
-##### Op Counters
+#### Op Counters
 The utilization baselines for your application will help you determine a normal count of operations. If these counts start to substantially deviate from your baselines it may be an indicator that something has changed in the application, or that a malicious attack is underway.
 
-##### Queues
+#### Queues
 *If MongoDB is unable to complete all requests in a timely fashion, requests will begin to queue up*. A healthy deployment will exhibit very short queues. If metrics start to deviate from baseline performance, requests from applications will start to queue. The queue is therefore a good first place to look to determine if there are issues that will affect user experience. Metric to be monitored, when you encounter a **Slow Performance** in your application.
 
-##### Replication Lag
+#### Replication Lag
 Replication lag is the amount of time it takes a write operation on the primary replica set member to replicate to a secondary member. *A small amount of delay is normal, but as replication lag grows, significant issues may arise.* If this is observed then replication throughput can be increased by moving to larger MongoDB Atlas instances or adding shards.
 
 **Bottom Line:** When you think, that your application is experiencing a **significant Lag**, check `Page Faults`,`Connections` and `Queues` first and then debug other metrics.
 
 ### Backup & Restore
-A backup and recovery strategy is necessary to protect your mission-critical data against catastrophic failure, such as a software bug or a user accidentally dropping collections. Taking regular backups offers other advantages, as well. The backups can be used to seed new environments for development, staging, or QA without impacting production systems.
+A **backup and recovery strategy** is necessary to protect your mission-critical data against **catastrophic** failure, such as a software bug or a user accidentally dropping collections. Taking regular backups offers other advantages, as well. The backups can be used to seed new environments for `development`, `staging`, or `QA` without impacting production systems.
 
 MongoDB Atlas backups are maintained continuously, just a few seconds behind the operational system. If the MongoDB cluster experiences a failure, the most recent backup is only moments behind, minimizing exposure to data loss. Here are the sub-categories in backup & Restore
 
 - ##### Schedule Backups
-Navigate to **Project** -> **Backups**, you will see the backups of all your clusters associated with that project. In that select the *options(...)* button -> *Edit-Snapshot-schedule*. You can edit the scheduling of the cluster`s snapshot. The default and the least is **6 hours**, you increase it based on your use-case and SLA. You also schedule the longevity of these snapshots based on day, weekly and monthly categories. **Best practice** is to follow the default schedule.
+Navigate to **Project** -> **Backups**, you will see the backups of all your clusters associated with that project. In that select the **options(...)** button -> **Edit-Snapshot-schedule**. You can edit the scheduling of the cluster`s snapshot. The default and the least is **6 hours**, you increase it based on your use-case and SLA. You can also schedule the longevity of these snapshots based on day, weekly and monthly categories. **Best practice** is to follow the default schedule.
 
 - ##### Query Backups
 MongoDB Atlas includes queryable backups, which allows you to perform queries against existing snapshots to more easily restore data at the document/ object level. Queryable backups allow you to accomplish the following with less time and effort:
 
-    - Restore a subset of objects/documents within the MongoDB cluster.
-    - Identify whether data has been changed in an undesirable way by looking at previous versions alongside current data.
-    - Identify the best point in time to restore a system by comparing data from multiple snapshots.
+- Restore a subset of objects/documents within the MongoDB cluster.
+- Identify whether data has been changed in an undesirable way by looking at previous versions alongside current data.
+- Identify the best point in time to restore a system by comparing data from multiple snapshots.
 
-you can query your backups either using **Backup Tunnel** or **Connect Manually**. Connect Manually is little tedious as you want to download the **Client certificate** and **Client CA** to connect to this backup and then query it. Lets see how to use **Backup Tunnel:**
+You can query your backups either using **Backup Tunnel** or **Connect Manually**. Connect Manually is little tedious as you want to download the **Client certificate** and **Client CA** to connect to this backup and then query it. Lets see how to use **Backup Tunnel:**
 
-    **1. **Under **Options** in **backups**, select **Query**. As a first step, you have to select the **snapshot** to query.
-    **2. **Enter your password to authorize the process.
-    **3. **Choose the platform and follow the instructions. You will able to connect from your local terminal to this backup and start querying. It is quite beneficial.
+**1. **Under **Options** in **backups**, select **Query**. As a first step, you have to select the **snapshot** to query.
+**2. **Enter your password to authorize the process.
+**3. **Choose the platform and follow the instructions. You will able to connect from your local terminal to this backup and start querying. It is quite beneficial.
 
 - ##### Restore Backup
-For some reasons, you want to restore your backup. You can either download the mongoDump and restore it some other machines or you restore to a cluster. You have three options namely snapshot, point in time and opLog Timestamp. **snapshot** is a regular one which is taken every 6 hours. **Point in time** helps you to restore to a particular time. [opLog:](https://www.compose.com/articles/the-mongodb-oplog-and-node-js/) You can restore based on the opLog(read, write operation timings).
+For some reasons, you want to restore your backup. There are two options, either **download** the mongoDump and **restore** it some other machines or you restore to a cluster. You have three options namely snapshot, point in time and opLog Timestamp. **snapshot** is a regular one which is taken every 6 hours. **Point in time** helps you to restore to a particular time. [opLog:](https://www.compose.com/articles/the-mongodb-oplog-and-node-js/) You can restore based on the opLog(read/write op timings).
 
-    - ###### Downloading the backup:
-      **1. ** **Under **Options** in **backups**, select **Restore**. As a first step, select the type of restore and select an entry from it.
-      **2. ** Now choose the **Download** option. After the user authorization process, you will be able to download the compressed mongo dump.
+- ###### Downloading the backup:
+  **1. ** **Under **Options** in **backups**, select **Restore**. As a first step, select the type of restore and select an entry from it.
+  **2. ** Now choose the **Download** option. After the user authorization process, you will be able to download the compressed mongo dump.
 
-    - ###### Restoring to cluster:
-      **1. **Under **Options** in **backups**, select **Restore**. As a first step, select the type of restore and select an entry from it.
-      **2. **Now choose the **Restore to Cluster** option. After the user authorization process, you will be moved to next step.
-      **3. **Select the **project** and the **cluster** to restore. If you restore to a different cluster (**e.g.** *to restore a backup from production into a QA environment*) then there will be no impact on the cluster that the backup was taken from, else there will be downtime until the restore is completed.
-      **Note: **You cannot restore to a free cluster(**M0**). Restore is available only for paid clusters. Automation will clear out all existing data for the chosen item and replace it with the data from your snapshot. All backup data and snapshots will be saved.
+- ###### Restoring to cluster:
+  **1. **Under **Options** in **backups**, select **Restore**. As a first step, select the type of restore and select an entry from it.
+  **2. **Now choose the **Restore to Cluster** option. After the user authorization process, you will be moved to next step.
+  **3. **Select the **project** and the **cluster** to restore. If you restore to a different cluster (**e.g.** *to restore a backup from production into a QA environment*) then there will be no impact on the cluster that the backup was taken from, else there will be downtime until the restore is completed.
+  **Note: **You cannot restore to a free cluster(**M0**). Restore is available only for paid clusters. Automation will clear out all existing data for the chosen item and replace it with the data from your snapshot. All backup data and snapshots will be saved.
 
 ### Summary
 I know this article is very long, here is the summary to get the key takeaway from this repo:
 
-**1.** Invest time in understanding the queries you have in your application and [model database](##Data-Modelingg) accordingly.
+**1.** Invest time in understanding the queries in your application and [model database](##Data-Modelingg) accordingly.
 
-**2.** Select **instance size**, **RAM** based upon your [working set](#RAM) of the application.
+**2.** Select **Instance size**, **RAM** based on your [working set](#RAM) of the application.
 
 **3.** Enable [Encryption at Rest](#Encryption-at-Rest) only when you have an SLA, else don`t do it. This will introduce a latency.
 
