@@ -354,7 +354,7 @@ For some reasons, you want to restore your backup. There are two options, either
   **2.** Now choose the **Restore to Cluster** option. After the user authorization process, you will be moved to next step.
 
   **3.** Select the **project** and the **cluster** to restore. If you restore to a different cluster (**e.g.** *to restore a backup from production into a QA environment*) then there will be no impact on the cluster that the backup was taken from, else there will be downtime until the restore is completed.
-  **Note: **You cannot restore to a free cluster(**M0**). Restore is available only for paid clusters. Automation will clear out all existing data for the chosen item and replace it with the data from your snapshot. All backup data and snapshots will be saved.
+  **Note:** You cannot restore to a free cluster(**M0**). Restore is available only for paid clusters. Automation will clear out all existing data for the chosen item and replace it with the data from your snapshot. All backup data and snapshots will be saved.
 
 ### Summary
 I know this article is very long, here is the summary to get the key takeaway from this repo:
