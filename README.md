@@ -9,9 +9,18 @@ This repo is a collection of mongoDB's best practices & features of Atlas. I was
     - [One-to-Few](#One-to-Few)
     - [One-to-Many](#One-to-Many)
     - [One-to-Squillions](#One-to-Squillions)
-- [Atlas Technical Architecture](#Atlas-Technical-Architecture)
+- [Atlas Technical Architecture](#atlas-technical-architecture)
 - [Atlas Best Practices](#Atlas-Best-Practices)
     - [Atlas Cluster Creation](#Atlas-Cluster-Creation)
+        - [Build a New Cluster](#build-a-new-cluster)
+        - [Cluster Name & MongoDB Version](#cluster-name--mongodb-version)
+        - [Cloud Provider & Region](#cloud-provider--region)
+        - [Instance Size](#instance-size)
+        - [RAM](#ram)
+        - [Storage Capacity, Speed and Encryption](#storage-capacity-speed-and-encryption)
+        - [Replication Factor](#replication-factor)
+        - [Sharded Cluster](#sharded-cluster)
+        - [Backup](#Backup)
     - [Sharding](#Sharding-Best-Practices)
     - [Security](#Atlas-Security)
     - [Monitoring Metrics](#Monitoring-Metrics)
@@ -19,17 +28,17 @@ This repo is a collection of mongoDB's best practices & features of Atlas. I was
     - [Summary](#Summary)
 
 ## Introduction to MongoDB
-At the time of writing, **MongoDB** is one of the **255** NoSQL databases. When compared to relational databases, [NoSQL](https://www.mongodb.com/nosql-explained) in general are more scalable and provide superior performance. Both *SQL* & *NoSQL* databases have their unique advantages and trade off. NoSQL databases are chosen for their *schema-less model and highly scalable system*. According to [CAP](https://en.wikipedia.org/wiki/CAP_theorem) theorem, any distributed system can only satisfy two of these three Qualities namely, **C**onsistent, **A**vailability & **P**artition tolerance.
+At the time of writing, **MongoDB** is one of the **255** NoSQL databases. When compared to relational databases, [NoSQL](https://www.mongodb.com/nosql-explained) in general are more scalable and provide superior performance. Both *SQL* & *NoSQL* databases have their unique advantages and trade off. **NoSQL** databases are chosen for their *schema-less model and highly scalable system*. According to [CAP](https://en.wikipedia.org/wiki/CAP_theorem) theorem, any distributed system can only satisfy two of these three Qualities namely, **C**onsistent, **A**vailability & **P**artition tolerance.
 
-As we know that SQL database are [ACID](https://en.wikipedia.org/wiki/ACID) constraint, it qualifies being Consistent and highly Available. So it is difficult for the SQL system to scale horizontally. In case of NoSQL as they are eventually consistent, they are highly Available and Partition tolerance.
+As we know that **SQL** database are [ACID](https://en.wikipedia.org/wiki/ACID) constraint, it qualifies being Consistent and highly Available. So it is difficult for the SQL system to scale horizontally. In case of NoSQL as they are eventually consistent, they are highly Available and Partition tolerance.
 
-Coming back to mongoDB, it is a [document-oriented](https://www.mongodb.com/what-is-mongodb) database which stores record as documents.
+Coming back to mongoDB, it is a [document-oriented](https://www.mongodb.com/what-is-mongodb) database which stores records as documents.
 
 ## What is Atlas?
-Having a single node mongoDB is quite easy. When we want to realize a multi-shared mongo cluster, managing the cluster is critical and a tiring job. [Atlas](https://www.mongodb.com/cloud/atlas) is mongoDB as a service, where the whole cluster is completely managed one.
+Having a single node mongoDB is quite easy. But, when we want to realize a multi-sharded mongo cluster, managing and monitoring the cluster becomes difficult. [Atlas](https://www.mongodb.com/cloud/atlas) is *mongoDB as a service*, where the whole cluster is completely managed by mongoDB. We can just concentrate on our application.
 
 ## Data Modeling
-MongoDb is so called **schema-less** database and you can ask me why should we model such a database? Even though mongoDb is a schema-less database, it is necessary to model it, in order to achieve best performance. One thumb rule to consider in NoSQL is to design the schema based on your queries, Whereas in SQL you design based on the structure of the data.
+MongoDb is so called **schema-less** database and *you can ask me why should we model such a database?* Even though mongoDb is a schema-less database, it is necessary to model it, in order to achieve best performance. **One thumb rule** to consider in **NoSQL** is, *to design the schema based on your queries, Whereas in SQL you design based on the structure of the data*.
 
 In general, `Joins` are expensive operations in database. When you use a *Join(one-to-N)* in SQL, it will incur a time penalty. In mongoDB, all we need to do is to flatten the **one-to-N** relationships. Lets see how we can model the one-to-N relationships in mongoDB. In fact, Joins are not possible in mongoDB queries, but can be performed inside the application.
 
@@ -40,7 +49,7 @@ Is the cardinality `One-to-Few`, `One-to-Many`, or `One-to-Squillions`? Dependin
 
 - ### One-to-Few
 
-An example of **One-to-Few** might be the addresses for a person. This is a good use case for embedding – you would put the addresses in an array inside of your Person object. Make a note, the maximum size of a mongoDB document is `16 MB`.
+An example of **One-to-Few** might be the `addresses for a person`. This is a good use case for **embedding** – you would put the addresses in an array inside of your Person object. Make a note, the maximum size of a mongoDB document is `16 MB`.
 
 ```js
 > db.person.findOne()
@@ -67,7 +76,7 @@ As I previously said, you have to model your schema based on your queries. So in
 
 - ### One-to-Many
 
-An example of **One-to-Many** might be parts for a product in a replacement parts ordering system. Each product may have up to several hundred replacement parts, but never more than a couple thousand or so. (All of those different-sized bolts, washers, and gaskets add up.) This is a good use case for referencing – you’d put the **ObjectIDs** of the parts in an array in product document. This type of referencing is called `child-referencing`, where you refer the child documents in the parent document.
+An example of **One-to-Many** might be parts for a product in a replacement parts ordering system. Each product may have up to several hundred replacement parts, but never more than a couple thousand or so. (All of those different-sized bolts, washers, and gaskets add up.) This is a good use case for **referencing** – you’d put the **ObjectIDs** of the parts in an array in product document. This type of referencing is called **child-referencing**, where you refer the child documents in the parent document.
 
 Each Part would have its own document:
 
@@ -109,7 +118,7 @@ You would then use an application-level join to retrieve the parts for a particu
 > product_parts = db.parts.find({_id: { $in : product.parts } } ).toArray();
 ```
 
-We should think NoSQL has **Not Only SQL**, meaning it can do additional operations in addition to the standard operations in SQL. We need to use the index feature of SQL in NoSQL, whenever the use case arises. In the above case, for efficient operation, you would need to have an index on `products.catalog_number`. Note that there will always be an index on `parts._id`, so that query will always be efficient.
+We should think **NoSQL** has **Not Only SQL**, i.e it can perform extra operations in addition to the same old SQL operations. We need to borrow the index feature of SQL in NoSQL, whenever the use case arises. In the above case, for efficient operation, you would need to have an index on `products.catalog_number`. Note that there will always be an index on `parts._id`, so that query will always be efficient.
 
 ##### Advantages:
 
@@ -118,12 +127,12 @@ We should think NoSQL has **Not Only SQL**, meaning it can do additional operati
 
 ##### Dis-Advantages:
 
-- The queries like show all the parts of the given product involves a **Join**, which has to be done in the application level.
-- When you denormalize the schema, updates has to be done in two collections **Product** and **Part**.
+- The queries like *show all the parts of the given product* involves a **Join**, which has to be done in the application level.
+- When you denormalize the schema, updates has to be done in two collections namely, **Product** and **Part**.
 
 - ### One-to-Squillions
 
-An example of **One-to-Squillions** might be an event logging system that collects log messages for different machines. Any given host could generate enough messages to overflow the **16 MB** document size, even if all you stored in the array was the **ObjectID**. This is the classic use case for `parent-referencing` – you would have a document for the host, and then store the ObjectID of the host in the documents for the log messages.
+An example of **One-to-Squillions** might be an event logging system that collects log messages for different machines. Any given host could generate enough messages to overflow the **16 MB** document size, even if all you stored in the array was the **ObjectID**. This is the classic use case for **parent-referencing** – you would have a document for the host, and then store the ObjectID of the host in the documents for the log messages.
 
 ```js
 > db.hosts.findOne()
@@ -152,14 +161,14 @@ You would use a (slightly different) application-level join to find the most rec
 
 As you can see, when you design the schema properly, you can scale mongoDB infinitely.
 
-The above modeling is just the basics, there is still more to it like **Two-way** referncing and denormalization. I consider this [article](https://highlyscalable.wordpress.com/2012/03/01/nosql-data-modeling-techniques/) as bible to NoSQL modeling. Check out the brilliant article by mongoDB for the [best practices in mongoDB modeling](https://www.mongodb.com/blog/post/6-rules-of-thumb-for-mongodb-schema-design-part-1). The above tips were partly from this article. Since this repo is going to concentrate more on Best Practices with mongoDB Atlas, I am going to jump to that.
+The above modeling is just the basics, there is still more to it like **Two-way referencing** and **Denormalization as per use-case**. I consider this [article](https://highlyscalable.wordpress.com/2012/03/01/nosql-data-modeling-techniques/) as bible to NoSQL modeling. Check out the brilliant article by mongoDB for the [best practices in mongoDB modeling](https://www.mongodb.com/blog/post/6-rules-of-thumb-for-mongodb-schema-design-part-1). The above tips were partly from this article. Since this repo is going to concentrate more on Best Practices with mongoDB Atlas, I am going to jump to that.
 
 ## Atlas Technical Architecture
-The Technical architecture shows a Single shard mongoDB cluster deployed in AWS. This gives an higher level understanding of how it works.
+The Technical architecture shows a **Single Shard MongoDB cluster** deployed in AWS. This gives an higher level understanding of how it works.
 
 ![Atlas Technical Architecture](https://raw.githubusercontent.com/lakshmantgld/mongoDB-Atlas/master/readmeFiles/architecture.png)
 
-you can deploy Atlas mongoDB cluster on any cloud provider of your choice. Since, our application is on AWS, we have deployed the atlas cluster on AWS. It securely communicates with our application through the **VPC peering**.
+You can deploy Atlas mongoDB cluster on any cloud provider of your choice. Since, our application is on AWS, we have deployed the atlas cluster on AWS. It securely communicates with our application through the **VPC peering**.
 
 ## Atlas Best Practices
 
@@ -167,7 +176,7 @@ you can deploy Atlas mongoDB cluster on any cloud provider of your choice. Since
 
 The cluster creation is surprisingly simple, you can deploy an entire Atlas cluster with few button clicks. I will list down the best practices in each step of creating the cluster.
 
-- ##### Step 1
+- ##### Build a New Cluster
 Once you are logged in to your **Project** -> **Clusters**, you will find the **Build a New Cluster** option in the upper right corner. Click that Button. you will see a long modal consisting steps for cluster creation process.
 
 - ##### Cluster Name & MongoDB Version
